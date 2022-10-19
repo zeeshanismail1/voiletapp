@@ -1,26 +1,32 @@
-const express = require('express');
-require('dotenv').config();
-require('express-async-errors');
-const cors = require('cors');
-const morgan = require('morgan');
-PORT = process.env.PORT || 5000;
-const connectDB = require('./db/connectDB');
+const express = require("express");
+const cookieparser = require("cookie-parser");
+const connectDB = require("./config/database");
+const userRoutes = require("./routes/userRoute");
+const bodyParser = require("body-parser");
+const path = require("path");
+const app = express();
+const cors = require("cors");
+const dotenv = require("dotenv");
+dotenv.config();
 
-// connectDB()
-const app = express(); 
-app.use(express.json());
-app.use(morgan('dev'));
+app.use(cookieparser());
 app.use(cors());
-app.use('/api/v1/transactions', require('./routes/Transaction'));
-const startServer = () => {
-  try {
-    connectDB(process.env.MONGO_URI);
-    app.listen(PORT, () => {
-      console.log(`Server running on ${PORT}`);
-    });
-  } catch (err) {
-    throw new Error(err);
-  }
-};
+app.use(express.json());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({
+  extended: true,
+  parameterLimit: 100000,
+  limit: '500mb'
+}));
+connectDB();
+app.use(userRoutes);
 
-startServer();
+// app.use('/', (req, res) => {
+//   res.send('Hello World');
+// })
+
+app.listen(process.env.PORT || 5002, () => {
+  console.log("Server running at port", process.env.PORT);
+});
+
+module.exports = app;
